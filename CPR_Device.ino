@@ -11,9 +11,9 @@
 
 MPU6050 accelgyro;
 int16_t ax, ay, az;
-int dt = 50;
+int dt = 100;
 long timer = 0;
-float a_c, a_g, dpos, dvel, pos = 0, vel = 0, g = 9.80665;
+float a_c, a_g, dpos, old_dpos, dvel, pos = 0, vel = 0, g = 9.80665;
 
 void red1() {
   digitalWrite(9, LOW);
@@ -73,11 +73,11 @@ void setup() {
   //Serial.print(accelgyro.getZAccelOffset()); Serial.print("\n");
 
   //calculate acceleration constant
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < dt; i++) {
     accelgyro.getAcceleration(&ax, &ay, &az);
     a_c += az;
   }
-  a_c /= 50;
+  a_c /= dt;
   a_g = float(a_c)/g; 
 
   // configure Arduino LED pin for output
@@ -102,9 +102,10 @@ void loop() {
   dpos += vel * dt + (1 / 2 * az * (dt ^ 2));
   dpos /= 25400;
   pos += dpos;
-  Serial.print("pos: ");
-  Serial.print(pos);
+  Serial.print("displacement: ");
+  Serial.print(dpos-old_dpos);
   Serial.print("\t");
+  old_dpos = dpos;
   
   //calculate change in velocity, convert to in/s, update velocity value
   dvel = az * dt;
